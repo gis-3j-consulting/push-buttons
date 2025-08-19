@@ -64,10 +64,12 @@
 <body>
     <div id="view"></div>
     <div id="position-buttons">
-        <input type="text" placeholder="1, 2, 3, 4" id="corner-position">
+        <label for="push-button-id">New ID</label>
+        <input type="text" placeholder="SGN-37810_1a_2...." id="push-button-id"> 
         <label for="corner-position">Corner Position</label>
-        <input type="text" placeholder="1, 2, 3" id="ramp-position"> 
+        <input type="text" placeholder="1, 2, 3, 4" id="corner-position">
         <label for="ramp-position">Ramp Position</label>
+        <input type="text" placeholder="1, 2, 3" id="ramp-position"> 
         <div id="image-container">
             <img src="cornerramp.png" alt="Corner and ramp positions" id="corner-ramp-image">
             <div id="grid-overlay"></div>
@@ -179,6 +181,7 @@
 
                         document.getElementById('corner-position').value = cornerOutput;
                         document.getElementById('ramp-position').value = rampOutput;
+                        document.getElementById('push-button-id').value = `${activeAssetId}_${cornerOutput}_${rampOutput}`;
                     });
 
                     cell.classList.add('grid-cell-active');
@@ -227,9 +230,7 @@
             document.getElementById('save-button').addEventListener('click', function() {
                 const cornerPosition = document.getElementById('corner-position').value;
                 const rampPosition = document.getElementById('ramp-position').value;
-
-                if (activeObjectId && activeAssetId && cornerPosition && rampPosition) {
-                    let pushButtonID = `${activeAssetId}_${cornerPosition}_${rampPosition}`;
+                const pushButtonID = document.getElementById('push-button-id').value;
 
                     const updateData = {
                         attributes: {
@@ -255,12 +256,10 @@
                     }).catch((error) => {
                         document.getElementById('status-message').innerText = `Error: ${error.message || error}`;
                     });
-                } else {
-                    document.getElementById('status-message').innerText = "Please select a feature and enter new ID.";
-                }
             });
         });
         
         </script>
-</body>s
+</body>
+</html>
 </html>
