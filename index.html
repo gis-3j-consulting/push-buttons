@@ -51,13 +51,66 @@
             border: 1px solid transparent;
             transition: background-color 0.2s;
         }
-        /* 
-        .grid-cell:hover {
+
+        /* .grid-cell:hover {
             background-color: rgba(0, 0, 255, 0.2);
         } */
 
         .grid-cell-active:hover {
             background-color: rgba(0, 255, 38, 0.2);
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            background-color: #4CAF50;
+            color: white;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #skip-button {
+            background-color: #ff9800;
+        }
+
+        #skip-button:hover {
+            background-color: #f57c00;
+        }
+
+        #previous-button {
+            background-color: #2196F3;
+        }
+
+        #previous-button:hover {
+            background-color: #1976D2;
+        }
+
+        #status-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #f5f5f5;
+            border-left: 4px solid #4CAF50;
+            font-size: 14px;
+        }
+
+        #status-message.error {
+            border-left-color: #f44336;
+        }
+
+        #status-message.warning {
+            border-left-color: #ff9800;
+        }
+
+        #status-message.info {
+            border-left-color: #2196F3;
         }
     </style>
 </head>
@@ -74,7 +127,9 @@
             <img src="cornerramp.png" alt="Corner and ramp positions" id="corner-ramp-image">
             <div id="grid-overlay"></div>
         </div>
+        <button id="previous-button">Previous</button>
         <button id="save-button">Save</button>
+        <button id="skip-button">Skip</button>
         <p id="status-message"></p>
     </div>
 
@@ -102,9 +157,10 @@
             
             var activeObjectId = null;
             var activeAssetId = null;
+            var previousFeature = null;
             
             var pushButtons = new FeatureLayer({
-                url: "https://services3.arcgis.com/pZZTDhBBLO3B9dnl/arcgis/rest/services/PushButtons_WaCo/FeatureServer/0",
+                url: "https://services1.arcgis.com/LX1Oq2Zzv8CmxRHo/ArcGIS/rest/services/PushButtons/FeatureServer/0",
                 outFields: ["*"],
                 renderer: {
                     type: "unique-value",
@@ -134,7 +190,7 @@
                     if (result.features.length > 0) {
                         const firstFeature = result.features[0];
                         activeObjectId = firstFeature.attributes.OBJECTID;
-                        activeAssetId = firstFeature.attributes.AssetID;
+                        activeAssetId = firstFeature.attributes.AssetID_1;
                         
                         const renderer = pushButtons.renderer.clone();
                         renderer.uniqueValueInfos = [{
@@ -170,6 +226,7 @@
                     cell.className = 'grid-cell';
                     cell.id = `cell-${i}`;
                     gridOverlay.appendChild(cell);
+                    cell.addEventListener('click', () => {console.log(`Cell ${i} clicked`);});
             }
 
             function assignGridToValues(cellId, cornerPosition, rampPosition) {
@@ -188,46 +245,183 @@
                 }
             }
 
-            assignGridToValues("cell-1159", "1a", 1);
+            assignGridToValues("cell-1209", "1a", 1);
             assignGridToValues("cell-1309", "1a", 2);
-            assignGridToValues("cell-1871", "2a", 1);
-            assignGridToValues("cell-1869", "2a", 2);
+            assignGridToValues("cell-1921", "2a", 1);
+            assignGridToValues("cell-1919", "2a", 2);
             assignGridToValues("cell-1331", "3a", 1);
             assignGridToValues("cell-1231", "3a", 2);
             assignGridToValues("cell-620", "4a", 1);
             assignGridToValues("cell-618", "4a", 2);
             assignGridToValues("cell-619", "4a", 2);
             assignGridToValues("cell-877", "4a", 1);
-            assignGridToValues("cell-825", "4a", 2);
-            assignGridToValues("cell-1027", "4a", 3);
+            assignGridToValues("cell-824", "4a", 2);
+            assignGridToValues("cell-978", "4a", 3);
             assignGridToValues("cell-1676", "3a", 1);
             assignGridToValues("cell-1577", "3a", 2);
             assignGridToValues("cell-1527", "3a", 2);
             assignGridToValues("cell-1674", "3a", 3);
-            assignGridToValues("cell-1614", "2a", 1);
-            assignGridToValues("cell-1666", "2a", 2);
+            assignGridToValues("cell-1613", "2a", 1);
+            assignGridToValues("cell-1615", "2a", 2);
             assignGridToValues("cell-1464", "2a", 3);
             assignGridToValues("cell-1514", "2a", 3);
             assignGridToValues("cell-863", "1a", 1);
-            assignGridToValues("cell-1012", "1a", 2);
-            assignGridToValues("cell-865", "1a", 3);
+            assignGridToValues("cell-962", "1a", 2);
+            assignGridToValues("cell-815", "1a", 3);
             assignGridToValues("cell-559", 1, 1);
             assignGridToValues("cell-560", 1, 1);
             assignGridToValues("cell-657", 1, 2);
             assignGridToValues("cell-607", 1, 2);
-            assignGridToValues("cell-530", 4, 2);
+            assignGridToValues("cell-580", 4, 2);
             assignGridToValues("cell-632", 4, 1);
             assignGridToValues("cell-682", 4, 1);
             assignGridToValues("cell-560", 1, 1);
             assignGridToValues("cell-657", 1, 2);
-            assignGridToValues("cell-1808", 2, 1);
-            assignGridToValues("cell-1858", 2, 1);
+            assignGridToValues("cell-1807", 2, 1);
+            assignGridToValues("cell-1857", 2, 1);
             assignGridToValues("cell-1959", 2, 2);
-            assignGridToValues("cell-1930", 3, 1);
+            assignGridToValues("cell-1980", 3, 1);
             assignGridToValues("cell-1832", 3, 2);
             assignGridToValues("cell-1882", 3, 2);
+            assignGridToValues("cell-1020", "", 1);
+            assignGridToValues("cell-1070", "", 1);
+            assignGridToValues("cell-1170", "1a", "");
+            assignGridToValues("cell-1220", "1a", "");
+            assignGridToValues("cell-1320", "2a", "");
+            assignGridToValues("cell-1470", "", 2);
+
+            function storePreviousFeature() {
+                previousFeature = {
+                    objectId: activeObjectId,
+                    assetId: activeAssetId,
+                    corner: document.getElementById('corner-position').value,
+                    ramp: document.getElementById('ramp-position').value,
+                    pushButtonId: document.getElementById('push-button-id').value
+                };
+            }
+
+            function updateStatusMessage(message, type = 'success') {
+                const statusEl = document.getElementById('status-message');
+                statusEl.innerText = message;
+                statusEl.className = '';
+                statusEl.classList.add(type);
+            }
+
+            function handleSkip() {
+                const updateData = {
+                    attributes: {
+                        OBJECTID: activeObjectId,
+                        AssetID_1: activeAssetId,
+                        CornerPos: null,
+                        RampPos: null,
+                        PushButtonID: "SKIP"
+                    }
+                };
+
+                pushButtons.applyEdits({
+                    updateFeatures: [updateData]
+                }).then((result) => {
+                    if (result.updateFeatureResults.length > 0) {
+                        if (result.updateFeatureResults[0].error) {
+                            updateStatusMessage(`Error: ${result.updateFeatureResults[0].error.message}`, 'error');
+                        } else {
+                            updateStatusMessage(`Marked as SKIP - moving to next feature`, 'warning');
+                            focusFeature();
+                        }
+                    }
+                }).catch((error) => {
+                    updateStatusMessage(`Error: ${error.message || error}`, 'error');
+                });
+            }
+
+            function restorePrevious() {
+                if (previousFeature) {
+                    document.getElementById('corner-position').value = previousFeature.corner;
+                    document.getElementById('ramp-position').value = previousFeature.ramp;
+                    document.getElementById('push-button-id').value = previousFeature.pushButtonId;
+                    
+                    const query = pushButtons.createQuery();
+                    query.where = `OBJECTID = ${previousFeature.objectId}`;
+                    
+                    pushButtons.queryFeatures(query).then((result) => {
+                        if (result.features.length > 0) {
+                            const feature = result.features[0];
+                            activeObjectId = feature.attributes.OBJECTID;
+                            activeAssetId = feature.attributes.AssetID_1;
+                            
+                            const renderer = pushButtons.renderer.clone();
+                            renderer.uniqueValueInfos = [{
+                                value: activeObjectId.toString(),
+                                symbol: {
+                                    type: "simple-marker",
+                                    color: "red",
+                                    size: "16px",
+                                    outline: {
+                                        color: "yellow",
+                                        width: 2
+                                    }
+                                }
+                            }];
+                            pushButtons.renderer = renderer;
+                            
+                            view.goTo({
+                                target: feature.geometry,
+                                zoom: 21
+                            });
+
+                            const cornerVal = feature.attributes.CornerPos || 'none';
+                            const rampVal = feature.attributes.RampPos || 'none';
+                            updateStatusMessage(`Returned to previous feature - Corner: ${cornerVal}, Ramp: ${rampVal}`, 'info');
+                        }
+                    });
+                } else {
+                    updateStatusMessage('No previous feature available', 'warning');
+                }
+            }
+
+            view.on("click", function(event) {
+                view.hitTest(event).then(function(response) {
+                    const feature = response.results.find(result => 
+                        result.graphic.layer === pushButtons
+                    )?.graphic;
+
+                    if (feature) {
+                        storePreviousFeature();
+                        activeObjectId = feature.attributes.OBJECTID;
+                        activeAssetId = feature.attributes.AssetID_1;
+                        
+                        const renderer = pushButtons.renderer.clone();
+                        renderer.uniqueValueInfos = [{
+                            value: activeObjectId.toString(),
+                            symbol: {
+                                type: "simple-marker",
+                                color: "red",
+                                size: "16px",
+                                outline: {
+                                    color: "yellow",
+                                    width: 2
+                                }
+                            }
+                        }];
+                        pushButtons.renderer = renderer;
+                        
+                        document.getElementById('corner-position').value = feature.attributes.CornerPos || '';
+                        document.getElementById('ramp-position').value = feature.attributes.RampPos || '';
+                        document.getElementById('push-button-id').value = feature.attributes.PushButtonID || '';
+                        
+                        view.goTo({
+                            target: feature.geometry,
+                            zoom: 21
+                        });
+                    }
+                });
+            });
+
+            document.getElementById('skip-button').addEventListener('click', handleSkip);
+            document.getElementById('previous-button').addEventListener('click', restorePrevious);
 
             document.getElementById('save-button').addEventListener('click', function() {
+                storePreviousFeature();
                 const cornerPosition = document.getElementById('corner-position').value;
                 const rampPosition = document.getElementById('ramp-position').value;
                 const pushButtonID = document.getElementById('push-button-id').value;
@@ -235,8 +429,8 @@
                     const updateData = {
                         attributes: {
                             OBJECTID: activeObjectId,
-                            AssetID: activeAssetId,
-                            CornPos: cornerPosition,
+                            AssetID_1: activeAssetId,
+                            CornerPos: cornerPosition,
                             RampPos: rampPosition,
                             PushButtonID: pushButtonID
                         }
@@ -247,14 +441,14 @@
                     }).then((result) => {
                         if (result.updateFeatureResults.length > 0) {
                             if (result.updateFeatureResults[0].error) {
-                                document.getElementById('status-message').innerText = `Error: ${result.updateFeatureResults[0].error.message}`;
+                                updateStatusMessage(`Error: ${result.updateFeatureResults[0].error.message}`, 'error');
                             } else {
-                                document.getElementById('status-message').innerText = `Updated with ID ${pushButtonID}`;
+                                updateStatusMessage(`Updated with ID ${pushButtonID}`, 'success');
                                 focusFeature();
                             }
                         }
                     }).catch((error) => {
-                        document.getElementById('status-message').innerText = `Error: ${error.message || error}`;
+                        updateStatusMessage(`Error: ${error.message || error}`, 'error');
                     });
             });
         });
