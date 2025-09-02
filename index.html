@@ -92,6 +92,14 @@
             background-color: #1976D2;
         }
 
+        #add-point {
+            background-color: #9C27B0;
+        }
+
+        #add-point:hover {
+            background-color: #7B1FA2;
+        }
+
         #status-message {
             margin-top: 15px;
             padding: 10px;
@@ -118,7 +126,7 @@
     <div id="view"></div>
     <div id="position-buttons">
         <label for="push-button-id">New ID</label>
-        <input type="text" placeholder="SGN-37810_1a_2...." id="push-button-id"> 
+        <input type="text" id="push-button-id"> 
         <label for="corner-position">Corner Position</label>
         <input type="text" placeholder="1, 2, 3, 4" id="corner-position">
         <label for="ramp-position">Ramp Position</label>
@@ -130,7 +138,9 @@
         <button id="previous-button">Previous</button>
         <button id="save-button">Save</button>
         <button id="skip-button">Skip</button>
+        <button id="add-point">Add Point</button>
         <p id="status-message"></p>
+        <textarea id="comment-box" rows="4" cols="30" placeholder="Comments..."></textarea>
     </div>
 
     <script>
@@ -138,12 +148,14 @@
         require([
             "esri/Map", 
             "esri/views/MapView", 
+            "esri/layers/ImageryLayer",
             "esri/widgets/Expand", 
             "esri/widgets/Legend", 
             "esri/widgets/ScaleBar", 
-            "esri/layers/FeatureLayer"
-        ], function(Map, MapView, Expand, Legend, ScaleBar, FeatureLayer) {
-            
+            "esri/layers/FeatureLayer",
+            "esri/Graphic"
+        ], function(Map, MapView, ImageryLayer, Expand, Legend, ScaleBar, FeatureLayer, Graphic) {
+
             const map = new Map({
                 basemap: "hybrid"
             });
@@ -155,9 +167,10 @@
                 zoom: 13
             });
             
-            var activeObjectId = null;
-            var activeAssetId = null;
-            var previousFeature = null;
+            let activeObjectId = null;
+            let activeAssetId = null;
+            let previousFeature = null;
+            let tempGraphic = null;
             
             var pushButtons = new FeatureLayer({
                 url: "https://services1.arcgis.com/LX1Oq2Zzv8CmxRHo/ArcGIS/rest/services/PushButtons/FeatureServer/0",
@@ -177,7 +190,12 @@
                     uniqueValueInfos: [] 
                 }
             });
+
+            const naipLayer = new ImageryLayer({
+                url: "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer"
+            });
             
+            map.add(naipLayer);
             map.add(pushButtons); 
             
             function focusFeature() {
@@ -218,6 +236,19 @@
             view.when(() => {
                 pushButtons.when(() => {
                     focusFeature();
+                });
+
+                const naipToggle = document.createElement("div");
+                naipToggle.className = "esri-widget esri-widget--button esri-widget-button";
+                naipToggle.title = "Toggle NAIP Imagery";
+                naipToggle.style.backgroundColor = "white";
+                naipToggle.innerHTML = '<span class="esri-icon-layers"></span>';
+                
+                view.ui.add(naipToggle, "top-right");
+                
+                naipToggle.addEventListener("click", function() {
+                    naipLayer.visible = !naipLayer.visible;
+                    this.style.backgroundColor = naipLayer.visible ? '#45a049' : 'white';
                 });
             });
             const gridOverlay = document.getElementById('grid-overlay');
@@ -314,7 +345,8 @@
                         AssetID_1: activeAssetId,
                         CornerPos: null,
                         RampPos: null,
-                        PushButtonID: "SKIP"
+                        PushButtonID: "SKIP",
+                        InspectorNotes: getCommentContent()
                     }
                 };
 
@@ -379,6 +411,15 @@
                 }
             }
 
+            function getCommentContent() {
+                const commentBoxContent = document.getElementById('comment-box').value.trim();
+                if (commentBoxContent === "Comments..." || commentBoxContent === "") {
+                    return null;
+                } else {
+                    return commentBoxContent;
+                }
+            }
+
             view.on("click", function(event) {
                 view.hitTest(event).then(function(response) {
                     const feature = response.results.find(result => 
@@ -408,6 +449,7 @@
                         document.getElementById('corner-position').value = feature.attributes.CornerPos || '';
                         document.getElementById('ramp-position').value = feature.attributes.RampPos || '';
                         document.getElementById('push-button-id').value = feature.attributes.PushButtonID || '';
+                        document.getElementById('comment-box').value = feature.attributes.InspectorNotes || '';
                         
                         view.goTo({
                             target: feature.geometry,
@@ -420,19 +462,115 @@
             document.getElementById('skip-button').addEventListener('click', handleSkip);
             document.getElementById('previous-button').addEventListener('click', restorePrevious);
 
+  
+            
+            document.getElementById('add-point').addEventListener('click', function() {
+                const addPointHandler = view.on("click", function(event) {
+                    const coordinates = event.mapPoint;
+
+                    const query = pushButtons.createQuery();
+                    query.geometry = coordinates;
+                    query.distance = 1000;
+                    query.units = "meters";
+                    query.outFields = ["AssetID_1"];
+                    query.orderByFields = ["OBJECTID"];
+                    query.num = 1;
+
+                    pushButtons.queryFeatures(query).then((result) => {
+                        let assetIdPrefix = "";
+                        if (result.features.length > 0) {
+                            assetIdPrefix = result.features[0].attributes.AssetID_1;
+                            if (assetIdPrefix.includes("_")) {
+                                assetIdPrefix = assetIdPrefix.split("_")[0];
+                            }
+                        }
+
+                        if (tempGraphic) {
+                            view.graphics.remove(tempGraphic);
+                        }
+
+                        tempGraphic = new Graphic({
+                            geometry: coordinates,
+                            symbol: {
+                                type: "simple-marker",
+                                color: "red",
+                                size: "16px",
+                                outline: {
+                                    color: "yellow",
+                                    width: 2
+                                }
+                            },
+                            attributes: {
+                                AssetID_1: assetIdPrefix,
+                                PushButtonID: null,
+                                CornerPos: null,
+                                RampPos: null
+                            }
+                        });
+
+                        view.graphics.add(tempGraphic);
+
+                        activeAssetId = assetIdPrefix;
+                        document.getElementById('corner-position').value = '';
+                        document.getElementById('ramp-position').value = '';
+                        document.getElementById('push-button-id').value = '';
+                        document.getElementById('comment-box').value = '';
+
+                        updateStatusMessage('New point placed - fill in the details and click Save to add it', 'info');
+
+                        addPointHandler.remove();
+                        view.cursor = "default";
+                    });
+                });
+
+                view.cursor = "crosshair";
+                updateStatusMessage('Click on the map to place a new point', 'info');
+            });
+
             document.getElementById('save-button').addEventListener('click', function() {
-                storePreviousFeature();
                 const cornerPosition = document.getElementById('corner-position').value;
                 const rampPosition = document.getElementById('ramp-position').value;
                 const pushButtonID = document.getElementById('push-button-id').value;
 
+                if (tempGraphic) { // Adding new point
+                    const newFeature = {
+                        geometry: tempGraphic.geometry,
+                        attributes: {
+                            AssetID_1: activeAssetId,
+                            CornerPos: cornerPosition,
+                            RampPos: rampPosition,
+                            PushButtonID: pushButtonID,
+                            InspectorNotes: getCommentContent()
+                        }
+                    };
+
+                    pushButtons.applyEdits({
+                        addFeatures: [newFeature]
+                    }).then((result) => {
+                        if (result.addFeatureResults.length > 0) {
+                            if (result.addFeatureResults[0].error) {
+                                updateStatusMessage(`Error: ${result.addFeatureResults[0].error.message}`, 'error');
+                            } else {
+                                view.graphics.remove(tempGraphic);
+                                tempGraphic = null;
+                                activeObjectId = result.addFeatureResults[0].objectId;
+                                updateStatusMessage(`New point saved with ID ${pushButtonID}`, 'success');
+                                focusFeature();
+                            }
+                        }
+                    }).catch((error) => {
+                        updateStatusMessage(`Error: ${error.message || error}`, 'error');
+                    });
+                } else { // Editing existing point
+                    storePreviousFeature();
                     const updateData = {
                         attributes: {
                             OBJECTID: activeObjectId,
                             AssetID_1: activeAssetId,
                             CornerPos: cornerPosition,
                             RampPos: rampPosition,
-                            PushButtonID: pushButtonID
+                            PushButtonID: pushButtonID,
+                            InspectorNotes: getCommentContent()
                         }
                     };
 
@@ -450,6 +588,7 @@
                     }).catch((error) => {
                         updateStatusMessage(`Error: ${error.message || error}`, 'error');
                     });
+                }
             });
         });
         
