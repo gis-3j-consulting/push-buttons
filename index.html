@@ -354,6 +354,7 @@
                         if (result.updateFeatureResults[0].error) {
                             updateStatusMessage(`Error: ${result.updateFeatureResults[0].error.message}`, 'error');
                         } else {
+                            document.getElementById('comment-box').value = '';
                             updateStatusMessage(`Marked as SKIP - moving to next feature`, 'warning');
                             focusFeature();
                         }
@@ -551,6 +552,7 @@
                                 view.graphics.remove(tempGraphic);
                                 tempGraphic = null;
                                 activeObjectId = result.addFeatureResults[0].objectId;
+                                document.getElementById('comment-box').value = '';
                                 updateStatusMessage(`New point saved with ID ${pushButtonID}`, 'success');
                                 focusFeature();
                             }
@@ -578,6 +580,7 @@
                             if (result.updateFeatureResults[0].error) {
                                 updateStatusMessage(`Error: ${result.updateFeatureResults[0].error.message}`, 'error');
                             } else {
+                                document.getElementById('comment-box').value = '';
                                 updateStatusMessage(`Updated with ID ${pushButtonID}`, 'success');
                                 focusFeature();
                             }
